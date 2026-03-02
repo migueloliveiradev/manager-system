@@ -87,7 +87,17 @@ static async Task InitializeSecurityAsync(IServiceProvider services)
 {
     using var scope = services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.EnsureCreatedAsync();
+    var environment = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
+    try
+    {
+        await db.Database.MigrateAsync();
+    }
+    catch (Exception ex) when (environment.IsDevelopment())
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseInit");
+        logger.LogWarning(ex, "Falling back to EnsureCreated in development because migrations are unavailable.");
+        await db.Database.EnsureCreatedAsync();
+    }
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
     foreach (var role in new[] { "Admin", "Manager", "Member" })
     {

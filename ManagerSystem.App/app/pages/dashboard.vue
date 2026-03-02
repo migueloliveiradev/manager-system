@@ -21,7 +21,10 @@ await load()
 
 const pending = computed(() => tasks.value.filter(x => x.progress < 100).length)
 const completed = computed(() => tasks.value.filter(x => x.progress === 100).length)
-const delayed = computed(() => tasks.value.filter(x => x.progress < 100 && x.dueDate && new Date(x.dueDate) < new Date()).length)
+const delayed = computed(() => {
+  const now = Date.now()
+  return tasks.value.filter(x => x.progress < 100 && x.dueDate && new Date(x.dueDate).getTime() < now).length
+})
 
 const urgentProjects = computed(() => projects.value
   .map(project => ({

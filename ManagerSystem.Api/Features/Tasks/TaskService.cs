@@ -77,8 +77,8 @@ public class TaskService(AppDbContext db) : ITaskService
     {
         var column = await db.TaskColumns.FirstOrDefaultAsync(x => x.Id == id);
         if (column is null) return BaseResponse<bool>.Failure("Column not found.");
-        var hasTasks = await db.Tasks.AnyAsync(x => x.StatusId == id);
-        if (hasTasks) return BaseResponse<bool>.Failure("Column has linked tasks.");
+        var taskCount = await db.Tasks.CountAsync(x => x.StatusId == id);
+        if (taskCount > 0) return BaseResponse<bool>.Failure($"Cannot delete column because it contains {taskCount} task(s). Move or delete tasks first.");
         db.TaskColumns.Remove(column);
         await db.SaveChangesAsync();
         return BaseResponse<bool>.Success(true);

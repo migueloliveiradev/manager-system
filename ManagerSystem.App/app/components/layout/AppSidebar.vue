@@ -8,6 +8,10 @@ const links = [
 ]
 
 const { logout } = useAuth()
+const onLogout = async () => {
+  logout()
+  await navigateTo('/auth')
+}
 </script>
 
 <template>
@@ -24,7 +28,7 @@ const { logout } = useAuth()
       color="neutral"
       variant="outline"
       block
-      @click="logout"
+      @click="onLogout"
     >
       Sair
     </UButton>

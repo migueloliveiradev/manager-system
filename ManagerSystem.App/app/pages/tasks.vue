@@ -89,10 +89,11 @@ const deleteTask = async (id: string) => {
 
 const createColumn = async () => {
   if (!filters.projectId || !columnForm.name) return
-  await api('/api/columns', { method: 'POST', body: { projectId: filters.projectId, name: columnForm.name, order: columnForm.order } })
+  const order = columns.value.length ? Math.max(...columns.value.map(x => x.order)) + 1 : 1
+  await api('/api/columns', { method: 'POST', body: { projectId: filters.projectId, name: columnForm.name, order } })
   columnModalOpen.value = false
   columnForm.name = ''
-  columnForm.order = columns.value.length + 1
+  columnForm.order = 1
   await loadColumns()
 }
 
@@ -117,6 +118,21 @@ const moveTask = async (task: WorkTask, statusId: string) => {
     }
   })
   await loadTasks()
+}
+
+const handleDrop = async (event: DragEvent, columnId: string) => {
+  const id = event.dataTransfer?.getData('taskId')
+  const task = tasks.value.find(t => t.id === id)
+  if (task) await moveTask(task, columnId)
+}
+
+const handleDragStart = (event: DragEvent, taskId: string) => {
+  event.dataTransfer?.setData('taskId', taskId)
+}
+
+const openEditTask = (task: WorkTask) => {
+  editingTask.value = task
+  taskModalOpen.value = true
 }
 
 const addComment = async () => {
@@ -186,7 +202,7 @@ const tasksByColumn = computed(() => columns.value.map(column => ({
         v-for="column in tasksByColumn"
         :key="column.id"
         @dragover.prevent
-        @drop="event => { const id = event.dataTransfer?.getData('taskId'); const task = tasks.find(t => t.id === id); if (task) moveTask(task, column.id) }"
+        @drop="handleDrop($event, column.id)"
       >
         <template #header>
           <div class="flex items-center justify-between">
@@ -197,6 +213,7 @@ const tasksByColumn = computed(() => columns.value.map(column => ({
               color="error"
               variant="ghost"
               size="xs"
+              aria-label="Excluir coluna"
               @click="deleteColumn(column.id)"
             >
               x
@@ -209,7 +226,7 @@ const tasksByColumn = computed(() => columns.value.map(column => ({
             :key="task.id"
             draggable="true"
             class="w-full text-left p-3 rounded border border-default bg-muted/30"
-            @dragstart="$event.dataTransfer?.setData('taskId', task.id)"
+            @dragstart="handleDragStart($event, task.id)"
           >
             <p class="font-medium">
               {{ task.title }}
@@ -221,7 +238,7 @@ const tasksByColumn = computed(() => columns.value.map(column => ({
               <UButton
                 size="xs"
                 variant="subtle"
-                @click.stop="editingTask = task; taskModalOpen = true"
+                @click.stop="openEditTask(task)"
               >
                 Editar
               </UButton>

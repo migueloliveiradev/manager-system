@@ -23,7 +23,10 @@ const saveProfile = async () => {
 }
 
 const changePassword = async () => {
-  if (!userId.value || !password.currentPassword || !password.newPassword) return
+  if (!userId.value || !password.currentPassword || !password.newPassword) {
+    message.value = 'Preencha senha atual e nova senha para continuar.'
+    return
+  }
   await api(`/api/users/${userId.value}/password`, { method: 'PUT', body: password })
   password.currentPassword = ''
   password.newPassword = ''
