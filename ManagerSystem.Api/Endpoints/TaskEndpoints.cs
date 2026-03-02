@@ -11,7 +11,7 @@ public static class TaskEndpoints
         group.MapPost("/", (HttpContext ctx, CreateTaskRequest request, ITaskService service) => service.CreateTaskAsync(ctx.GetUserId(), request));
         group.MapGet("/project/{projectId:guid}", (Guid projectId, ITaskService service) => service.ListTasksAsync(projectId));
         group.MapPut("/{id:guid}", (HttpContext ctx, Guid id, UpdateTaskRequest request, ITaskService service) => service.UpdateTaskAsync(ctx.GetUserId(), id, request));
-        group.MapDelete("/{id:guid}", (HttpContext ctx, Guid id, ITaskService service) => service.DeleteTaskAsync(ctx.GetUserId(), id));
+        group.MapDelete("/{id:guid}", (Guid id, ITaskService service) => service.DeleteTaskAsync(id));
         group.MapGet("/{taskId:guid}/history", (Guid taskId, ITaskService service) => service.ListHistoryAsync(taskId));
 
         var columns = app.MapGroup("/api/columns").RequireAuthorization();

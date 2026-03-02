@@ -36,9 +36,8 @@ public class TaskService(AppDbContext db) : ITaskService
         return BaseResponse<TaskResponse>.Success(ToDto(task));
     }
 
-    public async Task<BaseResponse<bool>> DeleteTaskAsync(Guid userId, Guid id)
+    public async Task<BaseResponse<bool>> DeleteTaskAsync(Guid id)
     {
-        _ = userId;
         var task = await db.Tasks.FirstOrDefaultAsync(x => x.Id == id);
         if (task is null) return BaseResponse<bool>.Failure("Task not found.");
         db.Tasks.Remove(task);

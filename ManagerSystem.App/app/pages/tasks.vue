@@ -33,7 +33,16 @@ const onDrop = (event: DragEvent, columnId: string) => {
 
 const createTask = () => {
   if (!newTask.title || !newTask.assignee) return
-  columns.value[0]?.tasks.push({ id: crypto.randomUUID(), title: newTask.title, assignee: newTask.assignee, priority: newTask.priority, dueDate: newTask.dueDate || '2026-03-10', progress: 0, history: ['Tarefa criada pelo modal rápido'] })
+  const task: TaskItem = {
+    id: crypto.randomUUID(),
+    title: newTask.title,
+    assignee: newTask.assignee,
+    priority: newTask.priority,
+    dueDate: newTask.dueDate || '2026-03-10',
+    progress: 0,
+    history: ['Tarefa criada pelo modal rápido']
+  }
+  columns.value[0]?.tasks.push(task)
   Object.assign(newTask, { title: '', assignee: '', priority: 2, dueDate: '' })
   showNewTask.value = false
 }
