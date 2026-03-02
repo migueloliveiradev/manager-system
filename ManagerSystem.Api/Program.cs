@@ -54,6 +54,8 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 
 var app = builder.Build();
 
+await ApplyMigrationsAsync(app.Services);
+
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 await EnsureRolesAsync(app.Services);
@@ -69,6 +71,13 @@ app.MapTaskEndpoints();
 app.MapCommentEndpoints();
 
 app.Run();
+
+static async Task ApplyMigrationsAsync(IServiceProvider services)
+{
+    using var scope = services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 static async Task EnsureRolesAsync(IServiceProvider services)
 {
