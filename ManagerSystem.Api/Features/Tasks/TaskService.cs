@@ -18,7 +18,17 @@ public class TaskService(AppDbContext db) : ITaskService
         return BaseResponse<TaskResponse>.Success(ToDto(task));
     }
 
-    public async Task<BaseResponse<List<TaskResponse>>> ListTasksAsync(Guid projectId) => BaseResponse<List<TaskResponse>>.Success(await db.Tasks.Where(x => x.ProjectId == projectId).Select(x => new TaskResponse(x.Id, x.Title, x.Description, x.Priority, x.StatusId, x.DueDate, x.ProjectId, x.AssigneeId, x.Progress)).ToListAsync());
+    public async Task<BaseResponse<List<TaskResponse>>> ListTasksAsync(TaskListQuery query)
+    {
+        var tasks = db.Tasks.AsQueryable();
+        if (query.ProjectId.HasValue) tasks = tasks.Where(x => x.ProjectId == query.ProjectId);
+        if (query.AssigneeId.HasValue) tasks = tasks.Where(x => x.AssigneeId == query.AssigneeId);
+        if (query.Priority.HasValue) tasks = tasks.Where(x => x.Priority == query.Priority);
+        if (query.StatusId.HasValue) tasks = tasks.Where(x => x.StatusId == query.StatusId);
+        if (query.DueDateUntil.HasValue) tasks = tasks.Where(x => x.DueDate <= query.DueDateUntil);
+        var data = await tasks.Select(x => new TaskResponse(x.Id, x.Title, x.Description, x.Priority, x.StatusId, x.DueDate, x.ProjectId, x.AssigneeId, x.Progress)).ToListAsync();
+        return BaseResponse<List<TaskResponse>>.Success(data);
+    }
 
     public async Task<BaseResponse<TaskResponse>> UpdateTaskAsync(Guid userId, Guid id, UpdateTaskRequest request)
     {
@@ -51,6 +61,27 @@ public class TaskService(AppDbContext db) : ITaskService
         db.TaskColumns.Add(column);
         await db.SaveChangesAsync();
         return BaseResponse<ColumnResponse>.Success(new ColumnResponse(column.Id, column.ProjectId, column.Name, column.Order));
+    }
+
+    public async Task<BaseResponse<ColumnResponse>> UpdateColumnAsync(Guid id, UpdateColumnRequest request)
+    {
+        var column = await db.TaskColumns.FirstOrDefaultAsync(x => x.Id == id);
+        if (column is null) return BaseResponse<ColumnResponse>.Failure("Column not found.");
+        column.Name = request.Name;
+        column.Order = request.Order;
+        await db.SaveChangesAsync();
+        return BaseResponse<ColumnResponse>.Success(new ColumnResponse(column.Id, column.ProjectId, column.Name, column.Order));
+    }
+
+    public async Task<BaseResponse<bool>> DeleteColumnAsync(Guid id)
+    {
+        var column = await db.TaskColumns.FirstOrDefaultAsync(x => x.Id == id);
+        if (column is null) return BaseResponse<bool>.Failure("Column not found.");
+        var hasTasks = await db.Tasks.AnyAsync(x => x.StatusId == id);
+        if (hasTasks) return BaseResponse<bool>.Failure("Column has linked tasks.");
+        db.TaskColumns.Remove(column);
+        await db.SaveChangesAsync();
+        return BaseResponse<bool>.Success(true);
     }
 
     public async Task<BaseResponse<List<ColumnResponse>>> ListColumnsAsync(Guid projectId) => BaseResponse<List<ColumnResponse>>.Success(await db.TaskColumns.Where(x => x.ProjectId == projectId).OrderBy(x => x.Order).Select(x => new ColumnResponse(x.Id, x.ProjectId, x.Name, x.Order)).ToListAsync());
