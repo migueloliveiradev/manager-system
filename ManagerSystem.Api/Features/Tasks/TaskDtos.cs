@@ -6,5 +6,7 @@ public record CreateTaskRequest(string Title, string Description, TaskPriority P
 public record UpdateTaskRequest(string Title, string Description, TaskPriority Priority, DateTime? DueDate, Guid StatusId, Guid? AssigneeId, int Progress);
 public record TaskResponse(Guid Id, string Title, string Description, TaskPriority Priority, Guid StatusId, DateTime? DueDate, Guid ProjectId, Guid? AssigneeId, int Progress);
 public record CreateColumnRequest(Guid ProjectId, string Name, int Order);
+public record UpdateColumnRequest(string Name, int Order);
 public record ColumnResponse(Guid Id, Guid ProjectId, string Name, int Order);
 public record TaskHistoryResponse(Guid Id, Guid TaskId, Guid UserId, string Action, DateTime CreatedAtUtc);
+public record TaskListQuery(Guid? ProjectId, Guid? AssigneeId, TaskPriority? Priority, Guid? StatusId, DateTime? DueDateUntil);

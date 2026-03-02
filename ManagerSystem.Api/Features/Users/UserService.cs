@@ -13,7 +13,13 @@ public class UserService(UserManager<AppUser> userManager) : IUserService
         return user is null ? BaseResponse<UserResponse>.Failure("User not found.") : BaseResponse<UserResponse>.Success(ToDto(user));
     }
 
-    public Task<BaseResponse<List<UserResponse>>> ListAsync() => Task.FromResult(BaseResponse<List<UserResponse>>.Success(userManager.Users.Select(ToDto).ToList()));
+    public async Task<BaseResponse<List<UserResponse>>> ListAsync(string? search)
+    {
+        var users = userManager.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+            users = users.Where(x => x.FullName.Contains(search) || (x.Email ?? string.Empty).Contains(search));
+        return BaseResponse<List<UserResponse>>.Success(await users.Select(x => new UserResponse(x.Id, x.FullName, x.Email ?? string.Empty, x.ProfilePhotoUrl, x.IsActive)).ToListAsync());
+    }
 
     public async Task<BaseResponse<UserResponse>> UpdateAsync(Guid id, UpdateUserRequest request)
     {

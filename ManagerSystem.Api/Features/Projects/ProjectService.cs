@@ -16,7 +16,14 @@ public class ProjectService(AppDbContext db) : IProjectService
         return BaseResponse<ProjectResponse>.Success(ToDto(project));
     }
 
-    public async Task<BaseResponse<List<ProjectResponse>>> ListAsync() => BaseResponse<List<ProjectResponse>>.Success(await db.Projects.Select(x => new ProjectResponse(x.Id, x.Name, x.Description, x.Status, x.CreatedById)).ToListAsync());
+    public async Task<BaseResponse<List<ProjectResponse>>> ListAsync(ProjectListQuery query)
+    {
+        var projects = db.Projects.AsQueryable();
+        if (query.Status.HasValue) projects = projects.Where(x => x.Status == query.Status);
+        if (!string.IsNullOrWhiteSpace(query.Search)) projects = projects.Where(x => x.Name.Contains(query.Search) || x.Description.Contains(query.Search));
+        var data = await projects.Select(x => new ProjectResponse(x.Id, x.Name, x.Description, x.Status, x.CreatedById)).ToListAsync();
+        return BaseResponse<List<ProjectResponse>>.Success(data);
+    }
 
     public async Task<BaseResponse<ProjectResponse>> GetAsync(Guid id)
     {
