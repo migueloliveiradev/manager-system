@@ -1,0 +1,7 @@
+**/bin/
+**/obj/
+**/node_modules/
+ManagerSystem.App/.nuxt/
+ManagerSystem.App/.output/
+ManagerSystem.App/.data/
+ManagerSystem.App/.cache/
